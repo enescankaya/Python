@@ -1,0 +1,143 @@
+import time
+import random
+
+class Room:
+    def __init__(self, name, description, items=None, exits=None):
+        self.name = name
+        self.description = description
+        self.items = items if items else []
+        self.exits = exits if exits else {}
+
+    def add_exit(self, direction, room):
+        self.exits[direction] = room
+
+    def add_item(self, item):
+        self.items.append(item)
+
+    def remove_item(self, item):
+        self.items.remove(item)
+
+class Item:
+    def __init__(self, name, description):
+        self.name = name
+        self.description = description
+
+class Character:
+    def __init__(self, name, description):
+        self.name = name
+        self.description = description
+
+class Game:
+    def __init__(self):
+        self.rooms = {}
+        self.current_room = None
+        self.player_inventory = []
+
+    def add_room(self, room):
+        self.rooms[room.name] = room
+
+    def move(self, direction):
+        if direction in self.current_room.exits:
+            self.current_room = self.current_room.exits[direction]
+            self.describe_room()
+        else:
+            print("You can't go that way.")
+
+    def take_item(self, item_name):
+        for item in self.current_room.items:
+            if item.name.lower() == item_name.lower():
+                self.player_inventory.append(item)
+                self.current_room.remove_item(item)
+                print(f"You took the {item.name}.")
+                return
+        print("Item not found.")
+
+    def use_item(self, item_name):
+        for item in self.player_inventory:
+            if item.name.lower() == item_name.lower():
+                print(f"You use the {item.name}.")
+                # Implement item usage logic here
+                return
+        print("Item not found in your inventory.")
+
+    def describe_room(self):
+        print("\n" + "=" * 50)
+        print(self.current_room.name)
+        print(self.current_room.description)
+        if self.current_room.items:
+            print("You see the following items:")
+            for item in self.current_room.items:
+                print(f"- {item.name}: {item.description}")
+        print("Exits:")
+        for direction, room in self.current_room.exits.items():
+            print(f"{direction}: {room.name}")
+        print("=" * 50 + "\n")
+
+    def start_game(self):
+        print("Welcome to the Adventure Game!\n")
+        print("You find yourself in a mysterious house...")
+        time.sleep(2)
+        self.current_room = self.rooms["Hallway"]
+        self.describe_room()
+        while True:
+            command = input("Enter your command (type 'help' for commands): ").lower()
+            if command == "help":
+                print("Commands:")
+                print("go [direction], take [item], use [item], inventory, quit")
+            elif command.startswith("go "):
+                direction = command.split()[1]
+                self.move(direction)
+            elif command.startswith("take "):
+                item_name = command.split(maxsplit=1)[1]
+                self.take_item(item_name)
+            elif command.startswith("use "):
+                item_name = command.split(maxsplit=1)[1]
+                self.use_item(item_name)
+            elif command == "inventory":
+                if self.player_inventory:
+                    print("Inventory:")
+                    for item in self.player_inventory:
+                        print(f"- {item.name}: {item.description}")
+                else:
+                    print("Your inventory is empty.")
+            elif command == "quit":
+                print("Thanks for playing!")
+                break
+            else:
+                print("Invalid command. Type 'help' for commands.")
+
+def main():
+    game = Game()
+
+    # Define rooms
+    hallway = Room("Hallway", "You are in a dimly lit hallway.")
+    kitchen = Room("Kitchen", "You are in a dusty old kitchen.")
+    living_room = Room("Living Room", "You are in a cozy living room.")
+    bedroom = Room("Bedroom", "You are in a bedroom with a large bed.")
+
+    # Define exits
+    hallway.add_exit("north", kitchen)
+    hallway.add_exit("east", living_room)
+    living_room.add_exit("west", hallway)
+    living_room.add_exit("north", bedroom)
+    bedroom.add_exit("south", living_room)
+
+    # Define items
+    knife = Item("Knife", "A sharp kitchen knife.")
+    key = Item("Key", "A rusty old key.")
+
+    # Add items to rooms
+    kitchen.add_item(knife)
+    bedroom.add_item(key)
+
+    # Add rooms to game
+    game.add_room(hallway)
+    game.add_room(kitchen)
+    game.add_room(living_room)
+    game.add_room(bedroom)
+
+    # Start the game
+    game.start_game()
+
+if __name__ == "__main__":
+    main()
