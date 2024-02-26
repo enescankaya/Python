@@ -1,0 +1,75 @@
+import time
+import random
+
+class Drone:
+    def __init__(self, name, max_altitude, max_speed):
+        self.name = name
+        self.max_altitude = max_altitude
+        self.max_speed = max_speed
+        self.altitude = 0
+        self.speed = 0
+        self.position = (0, 0)
+
+    def takeoff(self):
+        print(f"{self.name} is taking off...")
+        self.altitude = random.randint(50, self.max_altitude)
+        self.speed = random.randint(30, self.max_speed)
+        print(f"{self.name} is now flying at an altitude of {self.altitude} meters with a speed of {self.speed} km/h.")
+
+    def fly_to(self, destination):
+        print(f"{self.name} is flying to {destination}...")
+        self.position = destination
+        print(f"{self.name} has reached {destination}.")
+
+    def collect_data(self):
+        print(f"{self.name} is collecting data...")
+        time.sleep(3)
+        print(f"{self.name} has collected data.")
+
+    def analyze_data(self):
+        print(f"{self.name} is analyzing data...")
+        time.sleep(5)
+        print(f"{self.name} has analyzed data.")
+
+    def land(self):
+        print(f"{self.name} is landing...")
+        self.altitude = 0
+        self.speed = 0
+        print(f"{self.name} has landed.")
+
+class MissionPlanner:
+    def __init__(self):
+        self.waypoints = []
+
+    def add_waypoint(self, waypoint):
+        self.waypoints.append(waypoint)
+
+    def execute_mission(self, drone):
+        print("Mission is starting...")
+        drone.takeoff()
+        for waypoint in self.waypoints:
+            drone.fly_to(waypoint)
+            drone.collect_data()
+            drone.analyze_data()
+        drone.land()
+        print("Mission is completed.")
+
+def main():
+    # Create a drone
+    drone = Drone("Phantom 4 Pro", 500, 60)
+
+    # Create a mission planner
+    mission_planner = MissionPlanner()
+
+    # Define waypoints
+    waypoints = [(random.randint(-100, 100), random.randint(-100, 100)) for _ in range(5)]
+
+    # Add waypoints to the mission planner
+    for waypoint in waypoints:
+        mission_planner.add_waypoint(waypoint)
+
+    # Execute the mission
+    mission_planner.execute_mission(drone)
+
+if __name__ == "__main__":
+    main()
