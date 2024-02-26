@@ -1,0 +1,91 @@
+import json
+import os
+from datetime import datetime
+
+class Task:
+    def __init__(self, description, deadline=None, completed=False):
+        self.description = description
+        self.deadline = deadline
+        self.completed = completed
+
+    def mark_as_completed(self):
+        self.completed = True
+
+class TaskScheduler:
+    def __init__(self):
+        self.tasks = []
+
+    def add_task(self, description, deadline=None):
+        self.tasks.append(Task(description, deadline))
+        print("Task added successfully.")
+
+    def mark_task_as_completed(self, index):
+        if 0 <= index < len(self.tasks):
+            self.tasks[index].mark_as_completed()
+            print("Task marked as completed.")
+        else:
+            print("Invalid task index.")
+
+    def view_tasks(self):
+        if self.tasks:
+            print("Tasks:")
+            for i, task in enumerate(self.tasks):
+                status = "Done" if task.completed else "Pending"
+                deadline = task.deadline.strftime("%Y-%m-%d") if task.deadline else "None"
+                print(f"{i+1}. {task.description} - Deadline: {deadline} - Status: {status}")
+        else:
+            print("No tasks available.")
+
+    def save_tasks(self, filename):
+        with open(filename, "w") as file:
+            json.dump([{"description": task.description, "deadline": task.deadline.strftime("%Y-%m-%d") if task.deadline else None,
+                        "completed": task.completed} for task in self.tasks], file)
+
+    def load_tasks(self, filename):
+        if os.path.exists(filename):
+            with open(filename, "r") as file:
+                data = json.load(file)
+                self.tasks = [Task(task["description"], datetime.strptime(task["deadline"], "%Y-%m-%d") if task["deadline"] else None,
+                                   task["completed"]) for task in data]
+        else:
+            print("File not found.")
+
+def main():
+    task_scheduler = TaskScheduler()
+    filename = "tasks.json"
+
+    if os.path.exists(filename):
+        task_scheduler.load_tasks(filename)
+    
+    while True:
+        print("\nTask Scheduler")
+        print("1. Add Task")
+        print("2. Mark Task as Completed")
+        print("3. View Tasks")
+        print("4. Save Tasks")
+        print("5. Exit")
+
+        choice = input("Enter your choice: ")
+
+        if choice == "1":
+            description = input("Enter task description: ")
+            deadline = input("Enter deadline (YYYY-MM-DD): ")
+            if deadline:
+                deadline = datetime.strptime(deadline, "%Y-%m-%d")
+            task_scheduler.add_task(description, deadline)
+        elif choice == "2":
+            task_scheduler.view_tasks()
+            index = int(input("Enter task index to mark as completed: ")) - 1
+            task_scheduler.mark_task_as_completed(index)
+        elif choice == "3":
+            task_scheduler.view_tasks()
+        elif choice == "4":
+            task_scheduler.save_tasks(filename)
+            print("Tasks saved successfully.")
+        elif choice == "5":
+            break
+        else:
+            print("Invalid choice. Please try again.")
+
+if __name__ == "__main__":
+    main()
