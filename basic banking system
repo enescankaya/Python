@@ -1,0 +1,134 @@
+import json
+import os
+from datetime import datetime
+
+class Account:
+    def __init__(self, account_number, owner_name, balance=0):
+        self.account_number = account_number
+        self.owner_name = owner_name
+        self.balance = balance
+        self.transactions = []
+
+    def deposit(self, amount):
+        self.balance += amount
+        self.transactions.append(("Deposit", amount, datetime.now()))
+
+    def withdraw(self, amount):
+        if amount <= self.balance:
+            self.balance -= amount
+            self.transactions.append(("Withdrawal", amount, datetime.now()))
+        else:
+            print("Insufficient funds.")
+
+    def transfer(self, amount, recipient_account):
+        if amount <= self.balance:
+            self.balance -= amount
+            self.transactions.append(("Transfer to " + recipient_account.owner_name, amount, datetime.now()))
+            recipient_account.deposit(amount)
+        else:
+            print("Insufficient funds.")
+
+    def view_transactions(self):
+        if self.transactions:
+            for transaction in self.transactions:
+                print(f"{transaction[0]}: {transaction[1]} - {transaction[2].strftime('%Y-%m-%d %H:%M:%S')}")
+        else:
+            print("No transactions available.")
+
+class Bank:
+    def __init__(self):
+        self.accounts = {}
+
+    def create_account(self, account_number, owner_name):
+        if account_number not in self.accounts:
+            self.accounts[account_number] = Account(account_number, owner_name)
+            print("Account created successfully.")
+        else:
+            print("Account number already exists.")
+
+    def get_account(self, account_number):
+        return self.accounts.get(account_number, None)
+
+    def save_accounts(self, filename):
+        with open(filename, "w") as file:
+            data = {acc_num: {"owner_name": acc.owner_name, "balance": acc.balance, "transactions": [(str(t[0]), t[1], t[2].strftime("%Y-%m-%d %H:%M:%S")) for t in acc.transactions]} for acc_num, acc in self.accounts.items()}
+            json.dump(data, file)
+
+    def load_accounts(self, filename):
+        if os.path.exists(filename):
+            with open(filename, "r") as file:
+                data = json.load(file)
+                self.accounts = {acc_num: Account(acc_num, acc_data["owner_name"], acc_data["balance"]) for acc_num, acc_data in data.items()}
+                for acc_num, acc_data in data.items():
+                    self.accounts[acc_num].transactions = [(t[0], t[1], datetime.strptime(t[2], "%Y-%m-%d %H:%M:%S")) for t in acc_data["transactions"]]
+        else:
+            print("File not found.")
+
+def main():
+    bank = Bank()
+    filename = "accounts.json"
+
+    if os.path.exists(filename):
+        bank.load_accounts(filename)
+    
+    while True:
+        print("\nBanking System")
+        print("1. Create Account")
+        print("2. Deposit")
+        print("3. Withdraw")
+        print("4. Transfer")
+        print("5. View Transactions")
+        print("6. Exit")
+
+        choice = input("Enter your choice: ")
+
+        if choice == "1":
+            account_number = input("Enter account number: ")
+            owner_name = input("Enter owner name: ")
+            bank.create_account(account_number, owner_name)
+        elif choice == "2":
+            account_number = input("Enter account number: ")
+            amount = float(input("Enter deposit amount: "))
+            account = bank.get_account(account_number)
+            if account:
+                account.deposit(amount)
+                print("Deposit successful.")
+            else:
+                print("Account not found.")
+        elif choice == "3":
+            account_number = input("Enter account number: ")
+            amount = float(input("Enter withdrawal amount: "))
+            account = bank.get_account(account_number)
+            if account:
+                account.withdraw(amount)
+                print("Withdrawal successful.")
+            else:
+                print("Account not found.")
+        elif choice == "4":
+            sender_account = input("Enter sender account number: ")
+            recipient_account = input("Enter recipient account number: ")
+            amount = float(input("Enter transfer amount: "))
+            sender = bank.get_account(sender_account)
+            recipient = bank.get_account(recipient_account)
+            if sender and recipient:
+                sender.transfer(amount, recipient)
+                print("Transfer successful.")
+            else:
+                print("One or both accounts not found.")
+        elif choice == "5":
+            account_number = input("Enter account number: ")
+            account = bank.get_account(account_number)
+            if account:
+                print(f"Transactions for Account {account_number}:")
+                account.view_transactions()
+            else:
+                print("Account not found.")
+        elif choice == "6":
+            bank.save_accounts(filename)
+            print("Accounts saved successfully.")
+            break
+        else:
+            print("Invalid choice. Please try again.")
+
+if __name__ == "__main__":
+    main()
