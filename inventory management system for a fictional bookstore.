@@ -1,0 +1,104 @@
+import json
+import os
+
+class Book:
+    def __init__(self, isbn, title, author, price, quantity):
+        self.isbn = isbn
+        self.title = title
+        self.author = author
+        self.price = price
+        self.quantity = quantity
+
+class Inventory:
+    def __init__(self):
+        self.books = []
+
+    def add_book(self, isbn, title, author, price, quantity):
+        self.books.append(Book(isbn, title, author, price, quantity))
+        print("Book added to inventory.")
+
+    def sell_book(self, isbn, quantity):
+        for book in self.books:
+            if book.isbn == isbn:
+                if book.quantity >= quantity:
+                    book.quantity -= quantity
+                    print(f"{quantity} copies of '{book.title}' sold.")
+                else:
+                    print("Insufficient stock.")
+                return
+        print("Book not found in inventory.")
+
+    def replenish_stock(self, isbn, quantity):
+        for book in self.books:
+            if book.isbn == isbn:
+                book.quantity += quantity
+                print(f"{quantity} copies of '{book.title}' added to stock.")
+                return
+        print("Book not found in inventory.")
+
+    def view_inventory(self):
+        if self.books:
+            print("Inventory:")
+            for book in self.books:
+                print(f"ISBN: {book.isbn}, Title: {book.title}, Author: {book.author}, Price: {book.price}, Quantity: {book.quantity}")
+        else:
+            print("Inventory is empty.")
+
+    def save_inventory(self, filename):
+        with open(filename, "w") as file:
+            data = [{"isbn": book.isbn, "title": book.title, "author": book.author, "price": book.price, "quantity": book.quantity} for book in self.books]
+            json.dump(data, file)
+
+    def load_inventory(self, filename):
+        if os.path.exists(filename):
+            with open(filename, "r") as file:
+                data = json.load(file)
+                self.books = [Book(book["isbn"], book["title"], book["author"], book["price"], book["quantity"]) for book in data]
+        else:
+            print("File not found.")
+
+def main():
+    inventory = Inventory()
+    filename = "inventory.json"
+
+    if os.path.exists(filename):
+        inventory.load_inventory(filename)
+    
+    while True:
+        print("\nInventory Management System")
+        print("1. Add Book")
+        print("2. Sell Book")
+        print("3. Replenish Stock")
+        print("4. View Inventory")
+        print("5. Save Inventory")
+        print("6. Exit")
+
+        choice = input("Enter your choice: ")
+
+        if choice == "1":
+            isbn = input("Enter ISBN: ")
+            title = input("Enter Title: ")
+            author = input("Enter Author: ")
+            price = float(input("Enter Price: "))
+            quantity = int(input("Enter Quantity: "))
+            inventory.add_book(isbn, title, author, price, quantity)
+        elif choice == "2":
+            isbn = input("Enter ISBN of book to sell: ")
+            quantity = int(input("Enter quantity to sell: "))
+            inventory.sell_book(isbn, quantity)
+        elif choice == "3":
+            isbn = input("Enter ISBN of book to replenish: ")
+            quantity = int(input("Enter quantity to add to stock: "))
+            inventory.replenish_stock(isbn, quantity)
+        elif choice == "4":
+            inventory.view_inventory()
+        elif choice == "5":
+            inventory.save_inventory(filename)
+            print("Inventory saved successfully.")
+        elif choice == "6":
+            break
+        else:
+            print("Invalid choice. Please try again.")
+
+if __name__ == "__main__":
+    main()
